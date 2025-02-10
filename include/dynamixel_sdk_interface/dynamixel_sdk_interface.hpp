@@ -7,8 +7,9 @@
 
 #include <dynamixel_sdk/dynamixel_sdk.h>
 
-#include <dynamixel_sdk_interface/dynamixel_sdk_addresses.hpp>
-
+#include <dynamixel_sdk_interface/dynamixel_sdk_enums.hpp>
+#include <dynamixel_sdk_interface/dynamixel_px_addresses.hpp>
+#include <dynamixel_sdk_interface/dynamixel_xx_addresses.hpp>
 
 class DYNAMIXEL_SDK_INTERFACE
 {
@@ -24,7 +25,7 @@ protected:
     int dxl_comm_result_ = COMM_TX_FAIL;
 
 public:
-    DYNAMIXEL_SDK_INTERFACE(char* device_name, unsigned int baudrate);
+    DYNAMIXEL_SDK_INTERFACE(const char* device_name, unsigned int baudrate);
     ~DYNAMIXEL_SDK_INTERFACE();
 
 protected:
@@ -56,6 +57,8 @@ public:
     bool readGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<int32_t>& DATA);
 
     bool writeCurrentLimit(uint8_t ID, int16_t current_limit);
+    bool writeProfileVelocity(uint8_t ID, int32_t profile_velocity);
+    bool writeProfileAcceleration(uint8_t ID, int32_t profile_acceleration);
 
     bool readGoalCurrent(uint8_t ID, int16_t& goal_current);
     bool writeGoalCurrent(uint8_t ID, int16_t goal_current);

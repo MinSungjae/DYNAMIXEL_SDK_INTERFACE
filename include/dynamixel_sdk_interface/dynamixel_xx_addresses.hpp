@@ -1,5 +1,5 @@
-#ifndef __DYNAMIXEL_SDK_ADDRESSES_HPP__
-#define __DYNAMIXEL_SDK_ADDRESSES_HPP__
+#ifndef __DYNAMIXEL_XX_ADDRESSES_HPP__
+#define __DYNAMIXEL_XX_ADDRESSES_HPP__
 
 #define ADDR_XX_DRIVE_MODE              10
 #define ADDR_XX_OPERATING_MODE          11
@@ -37,26 +37,5 @@
 #define SIZE_XX_CURRENT_LIMIT           2
 #define SIZE_XX_GOAL_CURRENT            2
 
-enum class DXL_TORQUE : uint8_t
-{
-    TORQUE_OFF              = 0,
-    TORQUE_ON               = 1
-};
-
-enum class DXL_LED : uint8_t
-{
-    LED_OFF                 = 0,
-    LED_ON                  = 1
-};
-
-enum class DXL_OPERATING_MODE : uint8_t
-{
-    CURRENT_CONTROL_MODE    = 0,
-    VELOCITY_CONTROL_MODE   = 1,
-    POSITION_CONTROL_MODE   = 3,
-    EXTENDED_POSITION_MODE  = 4,
-    CURRENT_POSITION_MODE   = 5,
-    PWM_CONTROL_MODE        = 16,
-};
 
 #endif

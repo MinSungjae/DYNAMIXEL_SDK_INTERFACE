@@ -1,6 +1,6 @@
 #include <dynamixel_sdk_interface/dynamixel_sdk_interface.hpp>
 
-DYNAMIXEL_SDK_INTERFACE::DYNAMIXEL_SDK_INTERFACE(char* device_name, unsigned int baudrate)
+DYNAMIXEL_SDK_INTERFACE::DYNAMIXEL_SDK_INTERFACE(const char* device_name, unsigned int baudrate)
 {
     portHandler = dynamixel::PortHandler::getPortHandler(device_name);
 
@@ -347,6 +347,34 @@ bool DYNAMIXEL_SDK_INTERFACE::writeCurrentLimit(uint8_t ID, int16_t current_limi
     else
     {
         DEBUG_CERR("[DXL " << (int)ID <<  "]: Failed to set current limit." << std::endl);
+        return false;
+    }
+}
+
+bool DYNAMIXEL_SDK_INTERFACE::writeProfileVelocity(uint8_t ID, int32_t profile_velocity)
+{
+    if(write4ByteTxRx(ID, ADDR_PX_PROFILE_VELOCITY, static_cast<uint16_t>(profile_velocity)))
+    {
+        DEBUG_COUT("[DXL " << (int)ID <<  "]: Set profile velocity to " << profile_velocity << std::endl);
+        return true;
+    }
+    else
+    {
+        DEBUG_CERR("[DXL " << (int)ID <<  "]: Failed to set profile velocity." << std::endl);
+        return false;
+    }
+}
+
+bool DYNAMIXEL_SDK_INTERFACE::writeProfileAcceleration(uint8_t ID, int32_t profile_acceleration)
+{
+    if(write4ByteTxRx(ID, ADDR_PX_PROFILE_ACCELERATION, static_cast<uint16_t>(profile_acceleration)))
+    {
+        DEBUG_COUT("[DXL " << (int)ID <<  "]: Set profile acceleration to " << profile_acceleration << std::endl);
+        return true;
+    }
+    else
+    {
+        DEBUG_CERR("[DXL " << (int)ID <<  "]: Failed to set profile acceleration." << std::endl);
         return false;
     }
 }
