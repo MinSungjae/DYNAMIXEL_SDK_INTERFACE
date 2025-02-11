@@ -53,7 +53,7 @@ bool DYNAMIXEL_SDK_INTERFACE::reboot(uint8_t ID)
 
 bool DYNAMIXEL_SDK_INTERFACE::enableTorque(uint8_t ID)
 {
-    if(write1ByteTxRx(ID, ADDR_XX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_ON)))
+    if(write1ByteTxRx(ID, ADDR_PX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_ON)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Torque enabled!" << std::endl);
         return true;
@@ -67,7 +67,7 @@ bool DYNAMIXEL_SDK_INTERFACE::enableTorque(uint8_t ID)
 
 bool DYNAMIXEL_SDK_INTERFACE::disableTorque(uint8_t ID)
 {
-    if(write1ByteTxRx(ID, ADDR_XX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_OFF)))
+    if(write1ByteTxRx(ID, ADDR_PX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_OFF)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Torque disabled!" << std::endl);
         return true;
@@ -109,7 +109,7 @@ bool DYNAMIXEL_SDK_INTERFACE::turnOnLED(uint8_t ID)
 
 bool DYNAMIXEL_SDK_INTERFACE::changeOperatingMode(uint8_t ID, DXL_OPERATING_MODE mode)
 {
-    if(write1ByteTxRx(ID, ADDR_XX_OPERATING_MODE, static_cast<uint8_t>(mode)))
+    if(write1ByteTxRx(ID, ADDR_PX_OPERATING_MODE, static_cast<uint8_t>(mode)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Change operating mode to " << static_cast<uint16_t>(mode) << "!" << std::endl);
         return true;
@@ -339,7 +339,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
 
 bool DYNAMIXEL_SDK_INTERFACE::writeCurrentLimit(uint8_t ID, int16_t current_limit)
 {
-    if(write2ByteTxRx(ID, ADDR_XX_CURRENT_LIMIT, static_cast<uint16_t>(current_limit)))
+    if(write2ByteTxRx(ID, ADDR_PX_CURRENT_LIMIT, static_cast<uint16_t>(current_limit)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set current limit to " << current_limit << std::endl);
         return true;
@@ -381,7 +381,7 @@ bool DYNAMIXEL_SDK_INTERFACE::writeProfileAcceleration(uint8_t ID, int32_t profi
 
 bool DYNAMIXEL_SDK_INTERFACE::readGoalCurrent(uint8_t ID, int16_t& goal_current)
 {
-    if(read2ByteTxRx(ID, ADDR_XX_GOAL_CURRENT, reinterpret_cast<uint16_t*>(&goal_current)))
+    if(read2ByteTxRx(ID, ADDR_PX_GOAL_CURRENT, reinterpret_cast<uint16_t*>(&goal_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal current to " << goal_current << std::endl);
         return true;
@@ -395,7 +395,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalCurrent(uint8_t ID, int16_t& goal_current)
 
 bool DYNAMIXEL_SDK_INTERFACE::writeGoalCurrent(uint8_t ID, int16_t goal_current)
 {
-    if(write2ByteTxRx(ID, ADDR_XX_GOAL_CURRENT, static_cast<uint16_t>(goal_current)))
+    if(write2ByteTxRx(ID, ADDR_PX_GOAL_CURRENT, static_cast<uint16_t>(goal_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal current to " << goal_current << std::endl);
         return true;
@@ -409,7 +409,7 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalCurrent(uint8_t ID, int16_t goal_current)
 
 bool DYNAMIXEL_SDK_INTERFACE::readGoalVelocity(uint8_t ID, int32_t& goal_velocity)
 {
-    if(read4ByteTxRx(ID, ADDR_XX_GOAL_VELOCITY, reinterpret_cast<uint32_t*>(&goal_velocity)))
+    if(read4ByteTxRx(ID, ADDR_PX_GOAL_VELOCITY, reinterpret_cast<uint32_t*>(&goal_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal velocity to " << goal_velocity << std::endl);
         return true;
@@ -423,7 +423,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalVelocity(uint8_t ID, int32_t& goal_velocit
 
 bool DYNAMIXEL_SDK_INTERFACE::writeGoalVelocity(uint8_t ID, int32_t goal_velocity)
 {
-    if(write4ByteTxRx(ID, ADDR_XX_GOAL_VELOCITY, static_cast<uint32_t>(goal_velocity)))
+    if(write4ByteTxRx(ID, ADDR_PX_GOAL_VELOCITY, static_cast<uint32_t>(goal_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal velocity to " << goal_velocity << std::endl);
         return true;
@@ -437,7 +437,7 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalVelocity(uint8_t ID, int32_t goal_velocit
 
 bool DYNAMIXEL_SDK_INTERFACE::readGoalPosition(uint8_t ID, int32_t& goal_position)
 {
-    if(read4ByteTxRx(ID, ADDR_XX_GOAL_POSITION, reinterpret_cast<uint32_t*>(&goal_position)))
+    if(read4ByteTxRx(ID, ADDR_PX_GOAL_POSITION, reinterpret_cast<uint32_t*>(&goal_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal position to " << goal_position << std::endl);
         return true;
@@ -451,7 +451,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalPosition(uint8_t ID, int32_t& goal_positio
 
 bool DYNAMIXEL_SDK_INTERFACE::writeGoalPosition(uint8_t ID, int32_t goal_position)
 {
-    if(write4ByteTxRx(ID, ADDR_XX_GOAL_POSITION, static_cast<uint32_t>(goal_position)))
+    if(write4ByteTxRx(ID, ADDR_PX_GOAL_POSITION, static_cast<uint32_t>(goal_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal position to " << goal_position << std::endl);
         return true;
@@ -465,7 +465,7 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalPosition(uint8_t ID, int32_t goal_positio
 
 bool DYNAMIXEL_SDK_INTERFACE::readPresentPWM(uint8_t ID, int16_t& present_pwm)
 {
-    if(read2ByteTxRx(ID, ADDR_XX_PRESENT_PWM, reinterpret_cast<uint16_t*>(&present_pwm)))
+    if(read2ByteTxRx(ID, ADDR_PX_PRESENT_PWM, reinterpret_cast<uint16_t*>(&present_pwm)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present pwm: " << present_pwm << std::endl);
         return true;
@@ -479,7 +479,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentPWM(uint8_t ID, int16_t& present_pwm)
 
 bool DYNAMIXEL_SDK_INTERFACE::readPresentCurrent(uint8_t ID, int16_t& present_current)
 {
-    if(read2ByteTxRx(ID, ADDR_XX_PRESENT_CURRENT, reinterpret_cast<uint16_t*>(&present_current)))
+    if(read2ByteTxRx(ID, ADDR_PX_PRESENT_CURRENT, reinterpret_cast<uint16_t*>(&present_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present current: " << present_current << std::endl);
         return true;
@@ -493,7 +493,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentCurrent(uint8_t ID, int16_t& present_cu
 
 bool DYNAMIXEL_SDK_INTERFACE::readPresentVelocity(uint8_t ID, int32_t& present_velocity)
 {
-    if(read4ByteTxRx(ID, ADDR_XX_PRESENT_VELOCITY, reinterpret_cast<uint32_t*>(&present_velocity)))
+    if(read4ByteTxRx(ID, ADDR_PX_PRESENT_VELOCITY, reinterpret_cast<uint32_t*>(&present_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present velocity: " << present_velocity << std::endl);
         return true;
@@ -507,7 +507,7 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentVelocity(uint8_t ID, int32_t& present_v
 
 bool DYNAMIXEL_SDK_INTERFACE::readPresentPosition(uint8_t ID, int32_t& present_position)
 {
-    if(read4ByteTxRx(ID, ADDR_XX_PRESENT_POSITION, reinterpret_cast<uint32_t*>(&present_position)))
+    if(read4ByteTxRx(ID, ADDR_PX_PRESENT_POSITION, reinterpret_cast<uint32_t*>(&present_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present position: " << present_position << std::endl);
         return true;
