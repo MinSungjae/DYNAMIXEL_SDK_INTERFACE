@@ -51,9 +51,9 @@ bool DYNAMIXEL_SDK_INTERFACE::reboot(uint8_t ID)
     return true;
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::enableTorque(uint8_t ID)
+bool DYNAMIXEL_SDK_INTERFACE::enableTorque(uint8_t ID, uint16_t ADDR)
 {
-    if(write1ByteTxRx(ID, ADDR_PX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_ON)))
+    if(write1ByteTxRx(ID, ADDR, static_cast<uint8_t>(DXL_TORQUE::TORQUE_ON)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Torque enabled!" << std::endl);
         return true;
@@ -65,9 +65,9 @@ bool DYNAMIXEL_SDK_INTERFACE::enableTorque(uint8_t ID)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::disableTorque(uint8_t ID)
+bool DYNAMIXEL_SDK_INTERFACE::disableTorque(uint8_t ID, uint16_t ADDR)
 {
-    if(write1ByteTxRx(ID, ADDR_PX_TORQUE_ENABLE, static_cast<uint8_t>(DXL_TORQUE::TORQUE_OFF)))
+    if(write1ByteTxRx(ID, ADDR, static_cast<uint8_t>(DXL_TORQUE::TORQUE_OFF)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Torque disabled!" << std::endl);
         return true;
@@ -79,7 +79,7 @@ bool DYNAMIXEL_SDK_INTERFACE::disableTorque(uint8_t ID)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::turnOffLED(uint8_t ID)
+bool DYNAMIXEL_SDK_INTERFACE::turnOffXxLed(uint8_t ID)
 {
     if(write1ByteTxRx(ID, ADDR_XX_LED, static_cast<uint8_t>(DXL_LED::LED_OFF)))
     {
@@ -93,7 +93,7 @@ bool DYNAMIXEL_SDK_INTERFACE::turnOffLED(uint8_t ID)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::turnOnLED(uint8_t ID)
+bool DYNAMIXEL_SDK_INTERFACE::turnOnXxLed(uint8_t ID)
 {
     if(write1ByteTxRx(ID, ADDR_XX_LED, static_cast<uint8_t>(DXL_LED::LED_ON)))
     {
@@ -107,9 +107,21 @@ bool DYNAMIXEL_SDK_INTERFACE::turnOnLED(uint8_t ID)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::changeOperatingMode(uint8_t ID, DXL_OPERATING_MODE mode)
+bool DYNAMIXEL_SDK_INTERFACE::turnPxLed(uint8_t ID, uint8_t red, uint8_t green, uint8_t blue)
 {
-    if(write1ByteTxRx(ID, ADDR_PX_OPERATING_MODE, static_cast<uint8_t>(mode)))
+    if(write1ByteTxOnly(ID, ADDR_PX_LED_RED, red))
+        DEBUG_COUT("[DXL " << (int)ID <<  "]: Red LED: " << (int)red << std::endl);
+    if(write1ByteTxOnly(ID, ADDR_PX_LED_GREEN, green))
+        DEBUG_COUT("[DXL " << (int)ID <<  "]: Green LED: " <<(int)green << std::endl);
+    if(write1ByteTxOnly(ID, ADDR_PX_LED_BLUE, blue))
+        DEBUG_COUT("[DXL " << (int)ID <<  "]: Blue LED: " << (int)blue << std::endl);
+
+    return true;
+}
+
+bool DYNAMIXEL_SDK_INTERFACE::changeOperatingMode(uint8_t ID, uint16_t ADDR, DXL_OPERATING_MODE mode)
+{
+    if(write1ByteTxRx(ID, ADDR, static_cast<uint8_t>(mode)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Change operating mode to " << static_cast<uint16_t>(mode) << "!" << std::endl);
         return true;
@@ -123,7 +135,7 @@ bool DYNAMIXEL_SDK_INTERFACE::changeOperatingMode(uint8_t ID, DXL_OPERATING_MODE
 
 bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<int32_t> DATA)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::timed_mutex> lock(mtx);
     dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR, SIZE);
 
     if (IDs.size() != DATA.size())
@@ -138,13 +150,13 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t 
     }
 
     for (size_t idx = 0; idx < IDs.size(); idx++) {
-        uint8_t param_goal_position[4];
-        param_goal_position[0] = DXL_LOBYTE(DXL_LOWORD(DATA[idx]));
-        param_goal_position[1] = DXL_HIBYTE(DXL_LOWORD(DATA[idx]));
-        param_goal_position[2] = DXL_LOBYTE(DXL_HIWORD(DATA[idx]));
-        param_goal_position[3] = DXL_HIBYTE(DXL_HIWORD(DATA[idx]));
+        uint8_t bytes[4];
+        bytes[0] = DXL_LOBYTE(DXL_LOWORD(DATA[idx]));
+        bytes[1] = DXL_HIBYTE(DXL_LOWORD(DATA[idx]));
+        bytes[2] = DXL_LOBYTE(DXL_HIWORD(DATA[idx]));
+        bytes[3] = DXL_HIBYTE(DXL_HIWORD(DATA[idx]));
 
-        if (!groupSyncWrite.addParam(IDs[idx], param_goal_position))
+        if (!groupSyncWrite.addParam(IDs[idx], bytes))
         {
             DEBUG_CERR("[DXL " << (int)IDs[idx] <<  "]: Failed to add param with GroupSyncWrite." << std::endl);
             return false;
@@ -164,7 +176,7 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t 
 
 bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<int16_t> DATA)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::timed_mutex> lock(mtx);
     dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR, SIZE);
 
     if (IDs.size() != DATA.size())
@@ -179,11 +191,11 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t 
     }
 
     for (size_t idx = 0; idx < IDs.size(); idx++) {
-        uint8_t param_goal_position[2];
-        param_goal_position[0] = DXL_LOBYTE(DXL_LOWORD(DATA[idx]));
-        param_goal_position[1] = DXL_HIBYTE(DXL_LOWORD(DATA[idx]));
+        uint8_t bytes[2];
+        bytes[0] = DXL_LOBYTE(DXL_LOWORD(DATA[idx]));
+        bytes[1] = DXL_HIBYTE(DXL_LOWORD(DATA[idx]));
 
-        if (!groupSyncWrite.addParam(IDs[idx], param_goal_position))
+        if (!groupSyncWrite.addParam(IDs[idx], bytes))
         {
             DEBUG_CERR("[DXL " << (int)IDs[idx] <<  "]: Failed to add param with GroupSyncWrite." << std::endl);
             return false;
@@ -203,7 +215,8 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGroupSync(std::vector<uint8_t> IDs, uint16_t 
 
 bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<uint8_t>& DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR, SIZE);
 
@@ -235,7 +248,6 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
             DATA[idx] = groupSyncRead.getData(ID, ADDR, SIZE);
         }
         groupSyncRead.clearParam();
-        mtx.unlock();
         return true;
     }
 
@@ -248,7 +260,8 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
 
 bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<int16_t>& DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR, SIZE);
 
@@ -281,7 +294,6 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
         }
 
         groupSyncRead.clearParam();
-        mtx.unlock();
         return true;
     }
     else
@@ -294,7 +306,8 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
 
 bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t ADDR, uint8_t SIZE, std::vector<int32_t>& DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR, SIZE);
 
@@ -327,7 +340,6 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
         }
 
         groupSyncRead.clearParam();
-        mtx.unlock();
         return true;
     }
     else
@@ -337,9 +349,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readGroupSync(std::vector<uint8_t> IDs, uint16_t A
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeCurrentLimit(uint8_t ID, int16_t current_limit)
+bool DYNAMIXEL_SDK_INTERFACE::writeCurrentLimit(uint8_t ID, uint16_t ADDR, int16_t current_limit)
 {
-    if(write2ByteTxRx(ID, ADDR_PX_CURRENT_LIMIT, static_cast<uint16_t>(current_limit)))
+    if(write2ByteTxRx(ID, ADDR, static_cast<uint16_t>(current_limit)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set current limit to " << current_limit << std::endl);
         return true;
@@ -351,9 +363,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeCurrentLimit(uint8_t ID, int16_t current_limi
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeProfileVelocity(uint8_t ID, int32_t profile_velocity)
+bool DYNAMIXEL_SDK_INTERFACE::writeProfileVelocity(uint8_t ID, uint16_t ADDR, int32_t profile_velocity)
 {
-    if(write4ByteTxRx(ID, ADDR_PX_PROFILE_VELOCITY, static_cast<uint16_t>(profile_velocity)))
+    if(write4ByteTxRx(ID, ADDR, static_cast<uint16_t>(profile_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set profile velocity to " << profile_velocity << std::endl);
         return true;
@@ -365,9 +377,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeProfileVelocity(uint8_t ID, int32_t profile_v
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeProfileAcceleration(uint8_t ID, int32_t profile_acceleration)
+bool DYNAMIXEL_SDK_INTERFACE::writeProfileAcceleration(uint8_t ID, uint16_t ADDR, int32_t profile_acceleration)
 {
-    if(write4ByteTxRx(ID, ADDR_PX_PROFILE_ACCELERATION, static_cast<uint16_t>(profile_acceleration)))
+    if(write4ByteTxRx(ID, ADDR, static_cast<uint16_t>(profile_acceleration)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set profile acceleration to " << profile_acceleration << std::endl);
         return true;
@@ -379,9 +391,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeProfileAcceleration(uint8_t ID, int32_t profi
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readGoalCurrent(uint8_t ID, int16_t& goal_current)
+bool DYNAMIXEL_SDK_INTERFACE::readGoalCurrent(uint8_t ID, uint16_t ADDR, int16_t& goal_current)
 {
-    if(read2ByteTxRx(ID, ADDR_PX_GOAL_CURRENT, reinterpret_cast<uint16_t*>(&goal_current)))
+    if(read2ByteTxRx(ID, ADDR, reinterpret_cast<uint16_t*>(&goal_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal current to " << goal_current << std::endl);
         return true;
@@ -393,9 +405,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalCurrent(uint8_t ID, int16_t& goal_current)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeGoalCurrent(uint8_t ID, int16_t goal_current)
+bool DYNAMIXEL_SDK_INTERFACE::writeGoalCurrent(uint8_t ID, uint16_t ADDR, int16_t goal_current)
 {
-    if(write2ByteTxRx(ID, ADDR_PX_GOAL_CURRENT, static_cast<uint16_t>(goal_current)))
+    if(write2ByteTxRx(ID, ADDR, static_cast<uint16_t>(goal_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal current to " << goal_current << std::endl);
         return true;
@@ -407,9 +419,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalCurrent(uint8_t ID, int16_t goal_current)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readGoalVelocity(uint8_t ID, int32_t& goal_velocity)
+bool DYNAMIXEL_SDK_INTERFACE::readGoalVelocity(uint8_t ID, uint16_t ADDR, int32_t& goal_velocity)
 {
-    if(read4ByteTxRx(ID, ADDR_PX_GOAL_VELOCITY, reinterpret_cast<uint32_t*>(&goal_velocity)))
+    if(read4ByteTxRx(ID, ADDR, reinterpret_cast<uint32_t*>(&goal_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal velocity to " << goal_velocity << std::endl);
         return true;
@@ -421,9 +433,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalVelocity(uint8_t ID, int32_t& goal_velocit
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeGoalVelocity(uint8_t ID, int32_t goal_velocity)
+bool DYNAMIXEL_SDK_INTERFACE::writeGoalVelocity(uint8_t ID, uint16_t ADDR, int32_t goal_velocity)
 {
-    if(write4ByteTxRx(ID, ADDR_PX_GOAL_VELOCITY, static_cast<uint32_t>(goal_velocity)))
+    if(write4ByteTxRx(ID, ADDR, static_cast<uint32_t>(goal_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal velocity to " << goal_velocity << std::endl);
         return true;
@@ -435,9 +447,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalVelocity(uint8_t ID, int32_t goal_velocit
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readGoalPosition(uint8_t ID, int32_t& goal_position)
+bool DYNAMIXEL_SDK_INTERFACE::readGoalPosition(uint8_t ID, uint16_t ADDR, int32_t& goal_position)
 {
-    if(read4ByteTxRx(ID, ADDR_PX_GOAL_POSITION, reinterpret_cast<uint32_t*>(&goal_position)))
+    if(read4ByteTxRx(ID, ADDR, reinterpret_cast<uint32_t*>(&goal_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal position to " << goal_position << std::endl);
         return true;
@@ -449,9 +461,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readGoalPosition(uint8_t ID, int32_t& goal_positio
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::writeGoalPosition(uint8_t ID, int32_t goal_position)
+bool DYNAMIXEL_SDK_INTERFACE::writeGoalPosition(uint8_t ID, uint16_t ADDR, int32_t goal_position)
 {
-    if(write4ByteTxRx(ID, ADDR_PX_GOAL_POSITION, static_cast<uint32_t>(goal_position)))
+    if(write4ByteTxRx(ID, ADDR, static_cast<uint32_t>(goal_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Set goal position to " << goal_position << std::endl);
         return true;
@@ -463,9 +475,9 @@ bool DYNAMIXEL_SDK_INTERFACE::writeGoalPosition(uint8_t ID, int32_t goal_positio
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readPresentPWM(uint8_t ID, int16_t& present_pwm)
+bool DYNAMIXEL_SDK_INTERFACE::readPresentPWM(uint8_t ID, uint16_t ADDR, int16_t& present_pwm)
 {
-    if(read2ByteTxRx(ID, ADDR_PX_PRESENT_PWM, reinterpret_cast<uint16_t*>(&present_pwm)))
+    if(read2ByteTxRx(ID, ADDR, reinterpret_cast<uint16_t*>(&present_pwm)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present pwm: " << present_pwm << std::endl);
         return true;
@@ -477,9 +489,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentPWM(uint8_t ID, int16_t& present_pwm)
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readPresentCurrent(uint8_t ID, int16_t& present_current)
+bool DYNAMIXEL_SDK_INTERFACE::readPresentCurrent(uint8_t ID, uint16_t ADDR, int16_t& present_current)
 {
-    if(read2ByteTxRx(ID, ADDR_PX_PRESENT_CURRENT, reinterpret_cast<uint16_t*>(&present_current)))
+    if(read2ByteTxRx(ID, ADDR, reinterpret_cast<uint16_t*>(&present_current)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present current: " << present_current << std::endl);
         return true;
@@ -491,9 +503,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentCurrent(uint8_t ID, int16_t& present_cu
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readPresentVelocity(uint8_t ID, int32_t& present_velocity)
+bool DYNAMIXEL_SDK_INTERFACE::readPresentVelocity(uint8_t ID, uint16_t ADDR, int32_t& present_velocity)
 {
-    if(read4ByteTxRx(ID, ADDR_PX_PRESENT_VELOCITY, reinterpret_cast<uint32_t*>(&present_velocity)))
+    if(read4ByteTxRx(ID, ADDR, reinterpret_cast<uint32_t*>(&present_velocity)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present velocity: " << present_velocity << std::endl);
         return true;
@@ -505,9 +517,9 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentVelocity(uint8_t ID, int32_t& present_v
     }
 }
 
-bool DYNAMIXEL_SDK_INTERFACE::readPresentPosition(uint8_t ID, int32_t& present_position)
+bool DYNAMIXEL_SDK_INTERFACE::readPresentPosition(uint8_t ID, uint16_t ADDR, int32_t& present_position)
 {
-    if(read4ByteTxRx(ID, ADDR_PX_PRESENT_POSITION, reinterpret_cast<uint32_t*>(&present_position)))
+    if(read4ByteTxRx(ID, ADDR, reinterpret_cast<uint32_t*>(&present_position)))
     {
         DEBUG_COUT("[DXL " << (int)ID <<  "]: Present position: " << present_position << std::endl);
         return true;
@@ -519,9 +531,22 @@ bool DYNAMIXEL_SDK_INTERFACE::readPresentPosition(uint8_t ID, int32_t& present_p
     }
 }
 
+bool DYNAMIXEL_SDK_INTERFACE::write1ByteTxOnly(uint8_t ID, uint16_t ADDR, uint8_t DATA)
+{
+    std::lock_guard<std::timed_mutex> lock(mtx);
+
+    dxl_comm_result_ = packetHandler->write1ByteTxOnly(portHandler, ID, ADDR, DATA);
+    if(dxl_comm_result_ != COMM_SUCCESS)
+    {
+        DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
+        return false;
+    }
+    return true;
+}
+
 bool DYNAMIXEL_SDK_INTERFACE::write1ByteTxRx(uint8_t ID, uint16_t ADDR, uint8_t DATA)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::timed_mutex> lock(mtx);
 
     dxl_comm_result_ = packetHandler->write1ByteTxRx(portHandler, ID, ADDR, DATA, &dxl_error_);
     if(dxl_comm_result_ != COMM_SUCCESS)
@@ -537,9 +562,22 @@ bool DYNAMIXEL_SDK_INTERFACE::write1ByteTxRx(uint8_t ID, uint16_t ADDR, uint8_t 
     return true;
 }
 
+bool DYNAMIXEL_SDK_INTERFACE::write2ByteTxOnly(uint8_t ID, uint16_t ADDR, uint16_t DATA)
+{
+    std::lock_guard<std::timed_mutex> lock(mtx);
+
+    dxl_comm_result_ = packetHandler->write2ByteTxOnly(portHandler, ID, ADDR, DATA);
+    if(dxl_comm_result_ != COMM_SUCCESS)
+    {
+        DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
+        return false;
+    }
+    return true;
+}
+
 bool DYNAMIXEL_SDK_INTERFACE::write2ByteTxRx(uint8_t ID, uint16_t ADDR, uint16_t DATA)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::timed_mutex> lock(mtx);
 
     dxl_comm_result_ = packetHandler->write2ByteTxRx(portHandler, ID, ADDR, DATA, &dxl_error_);
     if(dxl_comm_result_ != COMM_SUCCESS)
@@ -555,9 +593,23 @@ bool DYNAMIXEL_SDK_INTERFACE::write2ByteTxRx(uint8_t ID, uint16_t ADDR, uint16_t
     return true;
 }
 
+bool DYNAMIXEL_SDK_INTERFACE::write4ByteTxOnly(uint8_t ID, uint16_t ADDR, uint32_t DATA)
+{
+    std::lock_guard<std::timed_mutex> lock(mtx);
+
+    dxl_comm_result_ = packetHandler->write4ByteTxOnly(portHandler, ID, ADDR, DATA);
+    if(dxl_comm_result_ != COMM_SUCCESS)
+    {
+        DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
+        return false;
+    }
+    return true;
+}
+
+
 bool DYNAMIXEL_SDK_INTERFACE::write4ByteTxRx(uint8_t ID, uint16_t ADDR, uint32_t DATA)
 {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::timed_mutex> lock(mtx);
 
     dxl_comm_result_ = packetHandler->write4ByteTxRx(portHandler, ID, ADDR, DATA, &dxl_error_);
     if(dxl_comm_result_ != COMM_SUCCESS)
@@ -575,22 +627,20 @@ bool DYNAMIXEL_SDK_INTERFACE::write4ByteTxRx(uint8_t ID, uint16_t ADDR, uint32_t
 
 bool DYNAMIXEL_SDK_INTERFACE::read1ByteTxRx(uint8_t ID, uint16_t ADDR, uint8_t* DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dxl_comm_result_ = packetHandler->read1ByteTxRx(portHandler, ID, ADDR, static_cast<uint8_t*>(DATA), &dxl_error_);
         if(dxl_comm_result_ != COMM_SUCCESS)
         {
             DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
-            mtx.unlock();
             return false;
         }
         else if(dxl_error_ != 0)
         {
             DEBUG_CERR(packetHandler->getRxPacketError(dxl_comm_result_) << std::endl);
-            mtx.unlock();
             return false;
         }
-        mtx.unlock();
         return true;
     }
     else
@@ -602,22 +652,20 @@ bool DYNAMIXEL_SDK_INTERFACE::read1ByteTxRx(uint8_t ID, uint16_t ADDR, uint8_t* 
 
 bool DYNAMIXEL_SDK_INTERFACE::read2ByteTxRx(uint8_t ID, uint16_t ADDR, uint16_t* DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dxl_comm_result_ = packetHandler->read2ByteTxRx(portHandler, ID, ADDR, static_cast<uint16_t*>(DATA), &dxl_error_);
         if(dxl_comm_result_ != COMM_SUCCESS)
         {
             DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
-            mtx.unlock();
             return false;
         }
         else if(dxl_error_ != 0)
         {
             DEBUG_CERR(packetHandler->getRxPacketError(dxl_comm_result_) << std::endl);
-            mtx.unlock();
             return false;
         }
-        mtx.unlock();
         return true;
     }
     else
@@ -629,22 +677,20 @@ bool DYNAMIXEL_SDK_INTERFACE::read2ByteTxRx(uint8_t ID, uint16_t ADDR, uint16_t*
 
 bool DYNAMIXEL_SDK_INTERFACE::read4ByteTxRx(uint8_t ID, uint16_t ADDR, uint32_t* DATA)
 {
-    if(mtx.try_lock())
+    std::unique_lock<std::timed_mutex> lock(mtx, std::defer_lock);
+    if (lock.try_lock_for(std::chrono::milliseconds(5)))
     {
         dxl_comm_result_ = packetHandler->read4ByteTxRx(portHandler, ID, ADDR, static_cast<uint32_t*>(DATA), &dxl_error_);
         if(dxl_comm_result_ != COMM_SUCCESS)
         {
             DEBUG_COUT(packetHandler->getTxRxResult(dxl_comm_result_) << std::endl);
-            mtx.unlock();
             return false;
         }
         else if(dxl_error_ != 0)
         {
             DEBUG_CERR(packetHandler->getRxPacketError(dxl_comm_result_) << std::endl);
-            mtx.unlock();    
             return false;
         }
-        mtx.unlock();
         return true;
     }
     else
